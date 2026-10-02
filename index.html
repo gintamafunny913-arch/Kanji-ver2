@@ -163,7 +163,7 @@ body.battle #app{max-width:none;padding:0}
 /* writing */
 .pad{position:relative;height:210px;margin-top:14px;border:2px solid var(--line);border-radius:18px;background:#fff;overflow:hidden}
 .pad canvas{position:absolute;inset:0;width:100%;height:100%}
-#dc{touch-action:none;cursor:crosshair}
+.pad,.pad canvas,#dc{touch-action:none;cursor:crosshair}
 .tools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .grade{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
 .gd{border:0;border-radius:16px;padding:16px;font-weight:800;font-size:18px;color:#fff}
@@ -377,6 +377,33 @@ body.battle .gnav{display:none}
 .fin .theend{font-family:var(--mincho);font-size:56px;font-weight:800;letter-spacing:.12em;background:linear-gradient(90deg,#ffd27a,#ff9ac4,#9ad0ff);-webkit-background-clip:text;background-clip:text;color:transparent;animation:pop .8s}
 .fin p{font-family:var(--mincho);line-height:1.9;margin:6px 0 16px}
 .fin .primary,.fin .ghost{max-width:300px}
+/* list / chapter */
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}
+.tabs button{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 2px;font-weight:700;font-size:13px}
+.tabs button[aria-pressed="true"]{background:linear-gradient(135deg,var(--c4),var(--c5));color:#fff;border-color:transparent}
+.lsum{display:flex;gap:10px;align-items:center;margin:6px 2px;font-weight:800;font-size:14px}
+.lsum .ok{color:#15915f}.lsum .ng{color:var(--red)}.lsum .un{color:var(--sub)}.lsum span:last-child{margin-left:auto;font-weight:600;color:var(--sub);font-size:12px}
+.lbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.lbtns .mb{padding:11px 4px;font-size:13px}
+.lbtns .mb:only-child{grid-column:1 / -1}
+.mb:disabled{opacity:.45}
+.lrow{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;border:2px solid var(--line);border-radius:14px;background:#fff;text-align:left}
+.lrow:active{transform:translateY(1px)}
+.lrow .st{flex:0 0 32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#fff;background:#c9cfdb}
+.lrow.ok{border-color:#a6e3c6;background:#f4fcf8}.lrow.ok .st{background:#2ebd85}
+.lrow.ng{border-color:#ffb9c5;background:#fff6f8}.lrow.ng .st{background:#ff5d7a}
+.lrow .m{flex:1;min-width:0}
+.lrow .m b{display:block;font-family:var(--mincho);font-size:19px;font-weight:800;line-height:1.3}
+.lrow .m span{display:block;font-size:12px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrow .cnt{font-size:11px;color:var(--sub);white-space:nowrap}
+.itemcard{margin-top:8px;padding:16px 16px 12px;border:3px solid var(--ic);border-radius:20px;background:#fff;text-align:center}
+.itemcard .iw{font-family:var(--mincho);font-weight:800;font-size:44px;line-height:1.3;color:var(--ic)}
+.itemcard .iw.y{font-size:36px;letter-spacing:.06em}
+.itemcard .ir{font-size:14px;font-weight:700;color:var(--sub)}
+.itemcard .ix{margin:8px 0 4px;font-family:var(--mincho);font-weight:600;font-size:16px;line-height:1.8;text-align:left}
+.itemcard .ih{margin:6px 0 0;font-size:12px;color:var(--sub);font-weight:700}
+.itemcard .ih.ok{color:#15915f}.itemcard .ih.ng{color:var(--red)}
+.navrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 @media (prefers-reduced-motion:reduce){
   .roll{animation:none;position:relative;top:auto;padding-top:60px}
   .endstars{animation:none}
@@ -603,7 +630,7 @@ function buildQs(ids,lim,battle){
       it.forEach((o,idx)=>{
         const filled=`${o.before}<span class="a">${o.ans}</span>${o.after}`;
         const exp=`<p>${filled}</p><p><span class="a">${o.ans}</span>（${o.read}）</p>`;
-        if(Math.random()<.5){
+        if(QT.k==='w'||(QT.k!=='r'&&Math.random()<.5)){
           qs.push({ref:pg.id+':'+idx,color:pg.color,tag:pg.name,cat:'kw',ask:'カタカナを漢字に直そう',prompt:`${o.before}<mark>${o.kana}</mark>${o.after}`,cls:'',
             choices:[o.ans,...distract(o.ans,answers)],answer:o.ans,exp,long:false});
         }else{
@@ -616,7 +643,7 @@ function buildQs(ids,lim,battle){
       const ws=it.map(o=>o.w), ms=it.map(o=>o.m);
       it.forEach((o,idx)=>{
         const exp=`<p><span class="a">${o.w}</span></p><p>${o.m}</p>`;
-        if(!battle&&Math.random()<.5){
+        if(!battle&&(QT.y==='m'||(QT.y!=='w'&&Math.random()<.5))){
           qs.push({ref:pg.id+':'+idx,color:pg.color,tag:pg.name,cat:'ym',ask:'この四字熟語の意味は？',prompt:o.w,cls:'big',
             choices:[o.m,...(BOSSD?distract(o.m,ms):shuffle(ms.filter(x=>x!==o.m)).slice(0,NCH-1))],answer:o.m,exp,long:true});
         }else{
@@ -636,7 +663,7 @@ let S=null;
 function bestKey(k){return 'kd-best-'+k}
 function home(){
   if(B)endBattle();
-  S=null;W=null;
+  S=null;W=null;ITEMREF=null;
   if(R){clearInterval(R.iv);R=null}
   bossReset();setTrack('normal');
   document.body.classList.remove('battle');
@@ -656,12 +683,11 @@ function home(){
   ${store.get('kd-news')===NEWVER?'':`<div class="newsbar">
     <div class="nh"><span class="newtag">New！</span><b>更新情報</b><button class="nclose" id="nclose" aria-label="閉じる">✕</button></div>
     <ul>
-      <li><b>ボスが11体追加</b>（虎・天のランク、裏ボスも登場）</li>
-      <li><b>旧ボス4体がパワーアップして再登場</b>（新しい特殊能力とセリフ）</li>
-      <li>ボスの強さがランクで変わり、読み入力や手書きの問題も出ます</li>
-      <li><b>部首・画数クイズ</b>を追加</li>
-      <li><b>弱点レポート</b>を追加</li>
-      <li><b>通常BGM</b>を選べるようになりました</li>
+      <li><b>一覧モード</b>：語ごとの○✕を見て、特定の語を練習</li>
+      <li><b>小テストごとの設定画面</b>：書き・読み、問題数、出題のしかたを、ここで選べます</li>
+      <li>ボスの書き問題で、画面が動いて書きにくい不具合を修正</li>
+      <li>ボス11体追加、旧ボスがパワーアップ（ボス戦をチェック）</li>
+      <li>部首・画数クイズ、弱点レポート、通常BGMの選択</li>
     </ul>
   </div>`}
   <button class="streak" data-go="badge">
@@ -671,16 +697,7 @@ function home(){
   </button>
   <button class="pcard" data-go="bgm" style="--pc:#ff8a1f;margin-top:10px"><span class="k">♪</span><span class="m"><b>通常BGM${newPill('bgm')}</b><span>${nbgmName(NSEL)}</span></span><span class="best">えらぶ</span></button>
   <div class="group">クイズ</div>
-  <div class="seglabel">1回の問題数</div>
-  <div class="seg" role="group" aria-label="問題数">
-    ${[[10,'10問'],[20,'20問'],[0,'全問']].map(([v,l])=>`<button data-lim="${v}" aria-pressed="${limit===v}">${l}</button>`).join('')}
-  </div>
-  <div class="seglabel">出題のしかた</div>
-  <div class="seg" role="group" aria-label="出題のしかた">
-    <button data-pri="1" aria-pressed="${PRI}">前回出なかった問題を優先</button>
-    <button data-pri="0" aria-pressed="${!PRI}">完全ランダム</button>
-  </div>
-  <div class="list" style="margin-top:10px">
+  <div class="list">
     <button class="pcard mixA" data-go="all"><span class="k">全部</span><span class="m"><b>すべて（小テスト①〜③）</b><span>漢字と四字熟語をまぜて出題</span></span></button>
     <button class="pcard mixB" data-go="kanji"><span class="k">漢字</span><span class="m"><b>漢字ミックス</b><span>小テスト①〜③の漢字、95語</span></span></button>
     <button class="pcard mixC" data-go="yoji"><span class="k">四字</span><span class="m"><b>四字熟語ミックス</b><span>小テスト①〜③の四字熟語、60語</span></span></button>
@@ -689,6 +706,7 @@ function home(){
   <div class="list">${K.map(pageCard).join('')}${Y.map(pageCard).join('')}</div>
   <div class="group">書き取り・テスト・復習</div>
   <div class="list">
+    <button class="pcard" data-go="list" style="--pc:#3a8dff"><span class="k">一覧</span><span class="m"><b>一覧モード${newPill('list')}</b><span>語ごとの○✕を見て、特定の語を練習</span></span></button>
     <button class="pcard" data-go="write" style="--pc:#2ebd85"><span class="k">書</span><span class="m"><b>書き取り（手書き）</b><span>指で漢字を書いて、自分で○×をつける</span></span></button>
     <button class="pcard" data-go="test" style="--pc:#8f5cff"><span class="k">テスト</span><span class="m"><b>テストモード</b><span>書き、読み、意味を順番に。点数と弱点が出ます</span></span></button>
     <button class="pcard" data-go="weak" style="--pc:#ff8a1f"><span class="k">苦手</span><span class="m"><b>苦手ノート</b><span>間違えた問題を集めて復習（${wn}問）</span></span></button>
@@ -702,8 +720,6 @@ function home(){
     <button class="pcard" data-go="relay" style="--pc:#3a8dff"><span class="k">リレー</span><span class="m"><b>チームリレー</b><span>スマホを回して、チームで得点を競う</span></span></button>
   </div>`;
   const nc=document.getElementById('nclose');if(nc)nc.onclick=()=>{store.set('kd-news',NEWVER);home()};
-  app.querySelectorAll('[data-lim]').forEach(b=>b.onclick=()=>{limit=+b.dataset.lim;home()});
-  app.querySelectorAll('[data-pri]').forEach(b=>b.onclick=()=>{PRI=b.dataset.pri==='1';store.set('kd-pri',PRI?'on':'off');home()});
   app.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>start(b.dataset.go));
   window.scrollTo(0,0);
 }
@@ -719,14 +735,8 @@ function start(key){
   if(key==='bgm')return bgmScreen();
   if(key==='report')return reportScreen();
   if(key==='busyu')return (S&&S.key==='busyu')?startBusyu():busyuSetup();
-  newSess();
-  let ids;
-  if(key==='all')ids=P.map(p=>p.id);
-  else if(key==='kanji')ids=P.filter(p=>p.kind==='k').map(p=>p.id);
-  else if(key==='yoji')ids=P.filter(p=>p.kind==='y').map(p=>p.id);
-  else ids=[key];
-  S={key,qs:buildQs(ids,limit),i:0,score:0,missed:[],done:false};
-  renderQ();
+  if(key==='list')return listScreen(cfgL.gid);
+  return practiceSetup(key);
 }
 
 /* ---------- 出題 ---------- */
@@ -782,7 +792,7 @@ function result(){
   S.done=true;
   const total=S.qs.length, pct=Math.round(S.score/total*100);
   noteSession('quiz',total,S.score,pct);
-  if(S.key!=='all'&&S.key!=='kanji'&&S.key!=='yoji'){
+  if(S.key!=='all'&&S.key!=='kanji'&&S.key!=='yoji'&&S.key!=='item'&&S.key!=='busyu'){
     const prev=+(store.get(bestKey(S.key))||0);
     if(pct>prev)store.set(bestKey(S.key),String(pct));
   }
@@ -795,12 +805,14 @@ function result(){
   ${missedHtml}
   ${S.key==='busyu'?'<p class="aiwarn"><b>⚠ AIによる注意書き</b>　部首と画数のデータは、AIが作成しました。誤りが含まれている可能性があります。テスト前には、辞書や先生の教材で確認してください。</p>':''}
   ${S.missed.length?'<button class="primary" id="retry">間違えた問題をやり直す</button>':''}
-  <button class="${S.missed.length?'ghost':'primary'}" id="again">同じ範囲でもう一度</button>
+  <button class="${S.missed.length?'ghost':'primary'}" id="again">同じ設定でもう一度</button>
+  ${S.back?`<button class="ghost" id="bk2">${S.backLabel||'戻る'}</button>`:''}
   <button class="ghost" id="home">ホームへ</button>`;
-  const key=S.key;
+  const key=S.key,S0=S,miss0=S.missed.slice();
   const r=document.getElementById('retry');
-  if(r)r.onclick=()=>{S={key,qs:shuffle(S.missed),i:0,score:0,missed:[],done:false};renderQ()};
-  document.getElementById('again').onclick=()=>start(key);
+  if(r)r.onclick=()=>{S=Object.assign({},S0,{qs:shuffle(miss0),i:0,score:0,missed:[],done:false});renderQ()};
+  document.getElementById('again').onclick=()=>{S0.again?S0.again():startQuiz(key)};
+  const bk2=document.getElementById('bk2');if(bk2)bk2.onclick=()=>{S=null;S0.back()};
   document.getElementById('home').onclick=home;
   window.scrollTo(0,0);
 }
@@ -1023,8 +1035,10 @@ function navBack(){
   if(B){endBattle();return battleSetup()}
   if(G)return bossSelect();
   if(R){clearInterval(R.iv);R=null;return relaySetup()}
-  if(W){const k=W.kind;W=null;return k==='test'?testSetup():k==='weak'?weakScreen():writeSetup()}
+  if(W){const k=W.kind,bk=W.back;W=null;if(bk)return bk();return k==='test'?testSetup():k==='weak'?weakScreen():writeSetup()}
+  if(S&&S.back){const bk=S.back;S=null;return bk()}
   if(S&&S.key==='busyu'){S=null;return busyuSetup()}
+  if(ITEMREF&&LCTX)return listScreen(LCTX.gid);
   home();
 }
 function navGo(kind){
@@ -1037,6 +1051,178 @@ document.getElementById('ghome').onclick=()=>navGo('home');
 const gnavEl=document.getElementById('gnav');
 function navSync(){gnavEl.hidden=!!app.querySelector('.hero')}
 new MutationObserver(navSync).observe(app,{childList:true});
+
+/* ---------- 範囲ごとの練習設定（問題数・書き/読み・出題のしかた） ---------- */
+let QT={k:'both',y:'both'};
+const cfgQ={n:10,form:'choice',kt:'both',yt:'both'};
+const quizIds=key=>key==='all'?P.map(p=>p.id):key==='kanji'?P.filter(p=>p.kind==='k').map(p=>p.id):key==='yoji'?P.filter(p=>p.kind==='y').map(p=>p.id):[key];
+const quizKind=key=>key==='all'?'a':(key==='kanji'||key[0]==='k')?'k':'y';
+const quizName=key=>key==='all'?'すべて（小テスト①〜③）':key==='kanji'?'漢字ミックス（①〜③）':key==='yoji'?'四字熟語ミックス（①〜③）':P.find(p=>p.id===key).name;
+const listGid=key=>(key==='all'||key==='kanji')?'k1':key==='yoji'?'y1':key;
+function priBlock(){
+  return `<div class="seglabel">出題のしかた</div>
+  <div class="seg pri"><button data-pri="1" aria-pressed="${PRI}">前回出なかった問題を優先</button><button data-pri="0" aria-pressed="${!PRI}">完全ランダム</button></div>`;
+}
+function bindPri(re){
+  app.querySelectorAll('.seg.pri button').forEach(b=>b.onclick=()=>{PRI=b.dataset.pri==='1';store.set('kd-pri',PRI?'on':'off');re()});
+}
+function practiceSetup(key){
+  S=null;ITEMREF=null;
+  const kind=quizKind(key);
+  const seg=(g,opts)=>`<div class="seg" data-g="${g}">${opts.map(([v,l])=>`<button data-v="${v}" aria-pressed="${String(cfgQ[g])===String(v)}">${l}</button>`).join('')}</div>`;
+  const total=quizIds(key).reduce((a,id)=>a+P.find(p=>p.id===id).items.length,0);
+  app.innerHTML=`
+  <header class="bar"><button class="x" id="back" aria-label="ホームへ戻る">✕</button><h2 class="bt-title">${quizName(key)}</h2></header>
+  <p class="hint">${total}語から出題します。${kind==='k'&&cfgQ.form==='write'?'記述式は、書きは手書き（自己採点）、読みはひらがな入力です。':''}</p>
+  ${kind==='k'?`<div class="seglabel">出題</div>${seg('kt',[['w','書き'],['r','読み'],['both','両方']])}
+  <div class="seglabel">答え方</div>${seg('form',[['choice','選択式（4択）'],['write','記述式（手書き・入力）']])}`:''}
+  ${kind==='y'?`<div class="seglabel">出題</div>${seg('yt',[['m','熟語→意味'],['w','意味→熟語'],['both','両方']])}`:''}
+  <div class="seglabel">問題数</div>${seg('n',[[10,'10問'],[20,'20問'],[0,'全問']])}
+  ${priBlock()}
+  <button class="primary" id="go">はじめる</button>
+  <button class="ghost" id="lst">一覧を見る（語ごとに練習）</button>`;
+  document.getElementById('back').onclick=home;
+  app.querySelectorAll('.seg[data-g] button').forEach(b=>b.onclick=()=>{
+    const g=b.parentElement.dataset.g;cfgQ[g]=(g==='n')?+b.dataset.v:b.dataset.v;practiceSetup(key);
+  });
+  bindPri(()=>practiceSetup(key));
+  document.getElementById('go').onclick=()=>startQuiz(key);
+  document.getElementById('lst').onclick=()=>listScreen(listGid(key));
+  window.scrollTo(0,0);
+}
+function startQuiz(key){
+  const kind=quizKind(key);
+  if(kind==='k'&&cfgQ.form==='write'){
+    cfgW.range=key;cfgW.type=({w:'write',r:'read',both:'both'})[cfgQ.kt];cfgW.n=cfgQ.n;
+    startWrite();
+    if(W){W.back=()=>practiceSetup(key);W.backLabel='設定へ';W.again=()=>startQuiz(key)}
+    return;
+  }
+  newSess();
+  QT={k:cfgQ.kt,y:cfgQ.yt};
+  let qs;
+  try{qs=buildQs(quizIds(key),cfgQ.n)}finally{QT={k:'both',y:'both'}}
+  S={key,qs,i:0,score:0,missed:[],done:false,back:()=>practiceSetup(key),backLabel:'設定へ',again:()=>startQuiz(key)};
+  renderQ();
+}
+
+/* ---------- 一覧モード（語ごとの○✕と、チャプター練習） ---------- */
+const cfgL={gid:'k1',filter:'all'};
+let LCTX=null,ITEMREF=null;
+function itemStat(ref){const it=(ST.item||{})[ref];return it?{n:it[0],ok:it[1],last:it[2]}:{n:0,ok:0,last:-1}}
+function itemInfo(ref){
+  const it=itemOf(ref),pg=it.pg;
+  if(pg.kind==='k'){const o=parseK(pg.items[it.i]);return{kind:'k',pg,o,word:o.ans,sub:o.read,full:`${o.before}<span class="a">${o.ans}</span>${o.after}`}}
+  const sp=pg.items[it.i].split('|');
+  return{kind:'y',pg,word:sp[0],sub:sp[1],full:sp[1]};
+}
+function listRefs(gid,filter){
+  const pg=P.find(p=>p.id===gid);
+  let refs=pg.items.map((_,i)=>gid+':'+i);
+  const f={ng:r=>itemStat(r).last===0,un:r=>itemStat(r).n===0,ok:r=>itemStat(r).last===1};
+  if(filter&&filter!=='all')refs=refs.filter(f[filter]);
+  return refs;
+}
+function listScreen(gid){
+  if(gid)cfgL.gid=gid;
+  S=null;W=null;ITEMREF=null;
+  const g=cfgL.gid,pg=P.find(p=>p.id===g);
+  const all=listRefs(g,'all'),cnt={ok:0,ng:0,un:0};
+  all.forEach(r=>{const s=itemStat(r);if(s.n===0)cnt.un++;else if(s.last===1)cnt.ok++;else cnt.ng++});
+  const refs=listRefs(g,cfgL.filter);
+  LCTX={gid:g,filter:cfgL.filter,refs};
+  const tabs=['k1','y1','k2','y2','k3','y3'];
+  const row=r=>{
+    const info=itemInfo(r),s=itemStat(r),cls=s.n===0?'':s.last===1?'ok':'ng',mark=s.n===0?'・':s.last===1?'○':'✕';
+    const sub=info.kind==='k'?info.sub:(info.sub.length>26?info.sub.slice(0,26)+'…':info.sub);
+    return `<button class="lrow ${cls}" data-r="${r}"><span class="st">${mark}</span><span class="m"><b>${info.word}</b><span>${sub}</span></span><span class="cnt">${s.n?`${s.n}回中${s.ok}回正解`:'未回答'}</span></button>`;
+  };
+  const kind=pg.kind;
+  app.innerHTML=`
+  <header class="bar"><button class="x" id="back" aria-label="ホームへ戻る">✕</button><h2 class="bt-title">一覧モード</h2></header>
+  <div class="tabs">${tabs.map(id=>{const p=P.find(x=>x.id===id);return `<button data-t="${id}" aria-pressed="${id===g}">${p.name.replace('小テスト','')}</button>`}).join('')}</div>
+  <div class="lsum"><span class="ok">○ ${cnt.ok}</span><span class="ng">✕ ${cnt.ng}</span><span class="un">未 ${cnt.un}</span><span>全${all.length}語</span></div>
+  <p class="hint" style="margin-top:2px">○＝直近で正解、✕＝直近で不正解、未＝まだ回答していない語です。語をタップすると、その語だけ練習できます。</p>
+  <div class="seg" data-f="1">${[['all','全部'],['ng','✕だけ'],['un','未だけ'],['ok','○だけ']].map(([v,l])=>`<button data-v="${v}" aria-pressed="${cfgL.filter===v}">${l}</button>`).join('')}</div>
+  <div class="lbtns">
+    <button class="mb pri" id="lp"${refs.length?'':' disabled'}>この一覧（${refs.length}語）を練習</button>
+    ${kind==='k'?`<button class="mb" id="lw"${refs.length?'':' disabled'}>記述式で練習</button>`:''}
+  </div>
+  <div class="list" style="margin-top:10px">${refs.map(row).join('')||'<p class="hint">該当する語はありません。</p>'}</div>`;
+  document.getElementById('back').onclick=home;
+  app.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{cfgL.filter='all';listScreen(b.dataset.t)});
+  app.querySelectorAll('.seg[data-f] button').forEach(b=>b.onclick=()=>{cfgL.filter=b.dataset.v;listScreen(g)});
+  app.querySelectorAll('.lrow').forEach(b=>b.onclick=()=>itemScreen(b.dataset.r));
+  const back=()=>listScreen(g);
+  const lp=document.getElementById('lp');if(lp)lp.onclick=()=>startRefsChoice(refs,back,'一覧へ');
+  const lw=document.getElementById('lw');if(lw)lw.onclick=()=>startRefsWrite(refs,back,'一覧へ');
+  window.scrollTo(0,0);
+}
+function itemScreen(ref){
+  S=null;W=null;ITEMREF=ref;
+  if(!LCTX||!LCTX.refs.includes(ref)){const g=ref.split(':')[0];LCTX={gid:g,filter:'all',refs:listRefs(g,'all')}}
+  const idx=LCTX.refs.indexOf(ref),n=LCTX.refs.length;
+  const info=itemInfo(ref),s=itemStat(ref),pg=info.pg;
+  const hist=s.n?`これまで${s.n}回、正解${s.ok}回。直近は${s.last===1?'○（正解）':'✕（不正解）'}`:'まだ回答していません';
+  const back=()=>itemScreen(ref);
+  app.innerHTML=`
+  <header class="bar"><button class="x" id="back" aria-label="一覧へ戻る">✕</button><h2 class="bt-title">${pg.name}</h2><span class="cnt">${idx+1} / ${n}</span></header>
+  <div class="itemcard" style="--ic:${pg.color}">
+    ${info.kind==='k'?`<div class="iw">${info.word}</div><div class="ir">読み：${info.sub}</div><p class="ix">${info.full}</p>`:`<div class="iw y">${info.word}</div><p class="ix">${info.sub}</p>`}
+    <p class="ih ${s.n?(s.last===1?'ok':'ng'):''}">${hist}</p>
+  </div>
+  <div class="navrow"><button class="mb" id="prev"${idx<=0?' disabled':''}>← 前の語</button><button class="mb" id="next"${idx>=n-1?' disabled':''}>次の語 →</button></div>
+  <div class="group">この語を練習</div>
+  ${info.kind==='k'?`<button class="primary" id="pw">手書きで練習（書き）</button>
+  <button class="ghost" id="pr">入力で練習（読み）</button>
+  <button class="ghost" id="pc">選択問題で練習</button>`:`<button class="primary" id="pc">選択問題で練習</button>`}
+  <button class="ghost" id="bl">一覧にもどる</button>`;
+  document.getElementById('back').onclick=()=>listScreen(LCTX.gid);
+  document.getElementById('bl').onclick=()=>listScreen(LCTX.gid);
+  document.getElementById('prev').onclick=()=>itemScreen(LCTX.refs[idx-1]);
+  document.getElementById('next').onclick=()=>itemScreen(LCTX.refs[idx+1]);
+  document.getElementById('pc').onclick=()=>startItemChoice(ref,back);
+  const pw=document.getElementById('pw'),pr=document.getElementById('pr');
+  if(pw)pw.onclick=()=>startItemWrite(ref,'w',back);
+  if(pr)pr.onclick=()=>startItemWrite(ref,'r',back);
+  window.scrollTo(0,0);
+}
+function itemChoiceQs(ref){
+  const gid=ref.split(':')[0],kind=P.find(p=>p.id===gid).kind;
+  const out=[];
+  const modes=kind==='k'?[{k:'w'},{k:'r'}]:[{y:'m'},{y:'w'}];
+  modes.forEach(m=>{
+    QT=Object.assign({k:'both',y:'both'},m);
+    try{const q=buildQs([gid],0).find(x=>x.ref===ref);if(q)out.push(q)}finally{QT={k:'both',y:'both'}}
+  });
+  return out;
+}
+function startItemChoice(ref,back){
+  newSess();
+  S={key:'item',qs:shuffle(itemChoiceQs(ref)),i:0,score:0,missed:[],done:false,back,backLabel:'この語の画面へ',again:()=>startItemChoice(ref,back)};
+  renderQ();
+}
+function startItemWrite(ref,m,back){
+  newSess();
+  W={qs:[mkQ(ref,m)],i:0,score:0,missed:[],log:[],kind:'item',t0:Date.now(),back,backLabel:'この語の画面へ',again:()=>startItemWrite(ref,m,back)};
+  renderW();
+}
+function startRefsChoice(refs,back,label){
+  if(!refs.length)return;
+  newSess();
+  const gids=[...new Set(refs.map(r=>r.split(':')[0]))];
+  let qs=[];
+  gids.forEach(g=>{qs=qs.concat(buildQs([g],0).filter(q=>refs.includes(q.ref)))});
+  S={key:'item',qs:shuffle(qs),i:0,score:0,missed:[],done:false,back,backLabel:label||'戻る',again:()=>startRefsChoice(refs,back,label)};
+  renderQ();
+}
+function startRefsWrite(refs,back,label){
+  if(!refs.length)return;
+  newSess();
+  const qs=shuffle(refs.flatMap(r=>[mkQ(r,'w'),mkQ(r,'r')])).slice(0,20);
+  W={qs,i:0,score:0,missed:[],log:[],kind:'item',t0:Date.now(),back,backLabel:label||'戻る',again:()=>startRefsWrite(refs,back,label)};
+  renderW();
+}
 
 /* ---------- 部首・画数クイズ ---------- */
 /* c:見出しの漢字, g:小テストのグループ, r:部首, s:画数（r=null は部首の出題なし） */
@@ -1103,7 +1289,7 @@ function startBusyu(){
   const ids=cfgBS.range==='all'?['k1','k2','k3']:[cfgBS.range];
   let qs=shuffle(busyuQs(ids,cfgBS.type));
   if(cfgBS.n&&qs.length>cfgBS.n)qs=qs.slice(0,cfgBS.n);
-  S={key:'busyu',qs,i:0,score:0,missed:[],done:false};
+  S={key:'busyu',qs,i:0,score:0,missed:[],done:false,back:busyuSetup,backLabel:'設定へ',again:startBusyu};
   renderQ();
 }
 
@@ -1230,12 +1416,12 @@ const BIMGS={1:BIMG[0],2:BIMG[1],3:BIMG[2],4:"data:image/webp;base64,UklGRjLfAAB
 const DAYQ=5;
 const jget=(k,d)=>{try{const v=store.get(k);return v?JSON.parse(v):d}catch(e){return d}};
 const jset=(k,v)=>store.set(k,JSON.stringify(v));
-let ST=Object.assign({tot:0,ok:0,write:0,perfect:0,test:0,test80:0,battle:0,relay:0,conq:0,best:0,days:{},bosses:{},cat:{},grp:{},missAll:{},bsOk:0},jget('kd-stat',{}));
+let ST=Object.assign({tot:0,ok:0,write:0,perfect:0,test:0,test80:0,battle:0,relay:0,conq:0,best:0,days:{},bosses:{},cat:{},grp:{},missAll:{},bsOk:0,item:{}},jget('kd-stat',{}));
 let WK=jget('kd-weak',{});
 /* 出題履歴: 各問題が最後に出た「回」を覚えて、前回出なかった問題を優先する */
 let SEEN=jget('kd-seen',{}),SESS=jget('kd-sess',0),PRI=store.get('kd-pri')!=='off';
 /* 更新情報（ホームの「New！」表示） */
-const NEWVER='v3';
+const NEWVER='v4';
 let NEWSEEN=jget('kd-newseen',{});
 const newPill=k=>NEWSEEN[k]?'':' <i class="newtag">New！</i>';
 function markNewSeen(k){if(k&&!NEWSEEN[k]){NEWSEEN[k]=1;jset('kd-newseen',NEWSEEN)}}
@@ -1304,6 +1490,8 @@ function noteAnswer(ok,kind,cat,ref){
     const gid=ref.split(':')[0];
     const g=ST.grp[gid]||(ST.grp[gid]=[0,0]);g[0]++;if(ok)g[1]++;
     if(!ok)ST.missAll[ref]=(ST.missAll[ref]||0)+1;
+    ST.item=ST.item||{};
+    const it=ST.item[ref]||(ST.item[ref]=[0,0,-1]);it[0]++;if(ok)it[1]++;it[2]=ok?1:0;
   }
   if(ok&&(cat==='bs'||cat==='bk'))ST.bsOk=(ST.bsOk||0)+1;
   const k=dayKey(),d=ST.days[k]||(ST.days[k]={q:0,ok:0});
@@ -1365,10 +1553,12 @@ function writeSetup(){
   <select id="rg" class="txt">${ranges.map(([v,l])=>`<option value="${v}"${cfgW.range===v?' selected':''}>${l}</option>`).join('')}</select>
   <div class="seglabel">出題</div>${seg('type',[['write','書き'],['read','読み'],['both','両方']])}
   <div class="seglabel">問題数</div>${seg('n',[[10,'10問'],[20,'20問'],[0,'全問']])}
+  ${priBlock()}
   <button class="primary" id="go">はじめる</button>`;
   const save=()=>{cfgW.range=document.getElementById('rg').value};
   document.getElementById('back').onclick=home;
-  app.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{
+  bindPri(()=>{save();writeSetup()});
+  app.querySelectorAll('.seg[data-g] button').forEach(b=>b.onclick=()=>{
     save();const g=b.parentElement.dataset.g;cfgW[g]=(g==='type')?b.dataset.v:+b.dataset.v;writeSetup();
   });
   document.getElementById('go').onclick=()=>{save();startWrite()};
@@ -1405,10 +1595,12 @@ function testSetup(){
     <option value="yoji"${cfgT.range==='yoji'?' selected':''}>四字熟語のみ</option>
   </select>
   <div class="seglabel">問題数</div>${seg('n',[[10,'10問'],[20,'20問'],[30,'30問']])}
+  ${priBlock()}
   <button class="primary" id="go">テスト開始</button>`;
   const save=()=>{cfgT.range=document.getElementById('rg').value};
   document.getElementById('back').onclick=home;
-  app.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{save();cfgT[b.parentElement.dataset.g]=+b.dataset.v;testSetup()});
+  bindPri(()=>{save();testSetup()});
+  app.querySelectorAll('.seg[data-g] button').forEach(b=>b.onclick=()=>{save();cfgT[b.parentElement.dataset.g]=+b.dataset.v;testSetup()});
   document.getElementById('go').onclick=()=>{save();startTest()};
   window.scrollTo(0,0);
 }
@@ -1536,7 +1728,7 @@ function renderWrite(q){
   const end=()=>{cur=null};
   dc.addEventListener('pointerdown',e=>{if(locked)return;e.preventDefault();dc.setPointerCapture(e.pointerId);cur=[pos(e)];strokes.push(cur);redraw()});
   dc.addEventListener('pointermove',e=>{if(!cur)return;cur.push(pos(e));redraw()});
-  dc.addEventListener('pointerup',end);dc.addEventListener('pointercancel',end);
+  dc.addEventListener('pointerup',end);dc.addEventListener('pointercancel',end);dc.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});dc.addEventListener('touchstart',e=>e.preventDefault(),{passive:false});
   document.getElementById('undo').onclick=()=>{if(locked)return;strokes.pop();redraw()};
   document.getElementById('clr').onclick=()=>{if(locked)return;strokes=[];redraw()};
   document.getElementById('show').onclick=()=>{
@@ -1648,19 +1840,19 @@ function resultW(){
       <p class="hint">${weak.length?`弱点の範囲：${weak.join('、')}`:'弱点の範囲はありません。'}　間違えた問題は苦手ノートに入りました。</p>`;
   }
   const missedHtml=W.missed.length?`<div class="group">間違えた問題</div><div class="miss">${W.missed.map(q=>`<div>${q.exp}</div>`).join('')}</div>`:'';
-  const missed=W.missed,kind=W.kind,el=Date.now()-W.t0;
+  const missed=W.missed,kind=W.kind,el=Date.now()-W.t0,W0=W;
   app.innerHTML=`
   <div class="score"><div class="n">${isTest?pct:W.score}<small>${isTest?' 点':' / '+total}</small></div><p>${isTest?`${W.score} / ${total} 問正解、`:''}${msg}（${pct}%）　所要 ${fmtT(el)}</p></div>
   ${extra}${missedHtml}
   ${missed.length?'<button class="primary" id="retry">間違えた問題をやり直す</button>':''}
   <button class="${missed.length?'ghost':'primary'}" id="again">${kind==='weak'?'苦手ノートへ':'同じ設定でもう一度'}</button>
-  ${kind==='weak'?'':'<button class="ghost" id="set">設定へ</button>'}
+  ${kind==='weak'?'':`<button class="ghost" id="set">${W.backLabel||'設定へ'}</button>`}
   <button class="ghost" id="home">ホームへ</button>`;
   const r=document.getElementById('retry');
-  if(r)r.onclick=()=>{W={qs:shuffle(missed),i:0,score:0,missed:[],log:[],kind:'write',t0:Date.now()};renderW()};
-  document.getElementById('again').onclick=()=>{kind==='test'?startTest():kind==='weak'?weakScreen():startWrite()};
+  if(r)r.onclick=()=>{W=Object.assign({},W0,{qs:shuffle(missed),i:0,score:0,missed:[],log:[],t0:Date.now(),done:false});renderW()};
+  document.getElementById('again').onclick=()=>{W0.again?W0.again():kind==='test'?startTest():kind==='weak'?weakScreen():startWrite()};
   const st=document.getElementById('set');
-  if(st)st.onclick=()=>{kind==='test'?testSetup():writeSetup()};
+  if(st)st.onclick=()=>{if(W0.back){W=null;W0.back()}else kind==='test'?testSetup():writeSetup()};
   document.getElementById('home').onclick=()=>{W=null;home()};
   window.scrollTo(0,0);
 }
@@ -1998,7 +2190,7 @@ function makePad(padEl,bgc,dc,ans){
   const end=()=>{cur=null};
   dc.addEventListener('pointerdown',e=>{if(locked)return;e.preventDefault();try{dc.setPointerCapture(e.pointerId)}catch(x){}cur=[pos(e)];strokes.push(cur);redraw()});
   dc.addEventListener('pointermove',e=>{if(!cur)return;cur.push(pos(e));redraw()});
-  dc.addEventListener('pointerup',end);dc.addEventListener('pointercancel',end);
+  dc.addEventListener('pointerup',end);dc.addEventListener('pointercancel',end);dc.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});dc.addEventListener('touchstart',e=>e.preventDefault(),{passive:false});
   return{
     guide,
     lock(){locked=true;cur=null},
