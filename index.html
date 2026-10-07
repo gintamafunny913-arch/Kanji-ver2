@@ -1142,13 +1142,8 @@ function buildQs(ids,lim,battle){
       it.forEach((o,idx)=>{
         const filled=`${o.before}<span class="a">${o.ans}</span>${o.after}`;
         const exp=`<p>${filled}</p><p><span class="a">${o.ans}</span>（${o.read}）</p>`;
-        if(QT.k==='w'||(QT.k!=='r'&&Math.random()<.5)){
-          qs.push({ref:pg.id+':'+idx,color:pg.color,tag:pg.name,cat:'kw',ask:'カタカナを漢字に直そう',prompt:`${o.before}<mark>${o.kana}</mark>${o.after}`,cls:'',
-            choices:[o.ans,...distract(o.ans,answers)],answer:o.ans,exp,long:false});
-        }else{
-          qs.push({ref:pg.id+':'+idx,color:pg.color,tag:pg.name,cat:'kr',ask:'二重線の語の読みは？',prompt:`${o.before}<u>${o.ans}</u>${o.after}`,cls:'',
-            choices:[o.read,...distract(o.read,reads)],answer:o.read,exp,long:false});
-        }
+        qs.push({ref:pg.id+':'+idx,color:pg.color,tag:pg.name,cat:'kr',ask:'二重線の語の読みは？',prompt:`${o.before}<u>${o.ans}</u>${o.after}`,cls:'',
+          choices:[o.read,...distract(o.read,reads)],answer:o.read,exp,long:false});
       });
     }else{
       const it=pg.items.map(s=>{const [w,m]=s.split('|');return{w,m}});
@@ -1680,7 +1675,7 @@ function pastScreen(){
 
 /* ---------- 範囲ごとの練習設定（問題数・書き/読み・出題のしかた） ---------- */
 let QT={k:'both',y:'both'};
-const cfgQ={n:10,form:'choice',kt:'both',yt:'both'};
+const cfgQ={n:10,kt:'r',yt:'both'};
 const quizIds=key=>rangeGroups(key);
 const quizKind=key=>key==='all'?'a':(key==='kanji'||key[0]==='k')?'k':'y';
 const quizName=key=>key==='all'?`すべて（${termOfId(TV).name}）`:key==='kanji'?`漢字ミックス（${termOfId(TV).name}）`:key==='yoji'?`${termOfId(TV).vl}ミックス（${termOfId(TV).name}）`:P.find(p=>p.id===key).name;
@@ -1699,9 +1694,8 @@ function practiceSetup(key){
   const total=quizIds(key).reduce((a,id)=>a+P.find(p=>p.id===id).items.length,0);
   app.innerHTML=`
   <header class="bar"><button class="x" id="back" aria-label="ホームへ戻る">✕</button><h2 class="bt-title">${quizName(key)}</h2></header>
-  <p class="hint">${total}語から出題します。${kind==='k'&&cfgQ.form==='write'?'記述式は、書きは手書き（自己採点）、読みはひらがな入力です。':''}</p>
-  ${kind==='k'?`<div class="seglabel">出題</div>${seg('kt',[['w','書き'],['r','読み'],['both','両方']])}
-  <div class="seglabel">答え方</div>${seg('form',[['choice','選択式（4択）'],['write','記述式（手書き・入力）']])}`:''}
+  <p class="hint">${total}語から出題します。${kind==='k'?'漢字は、読みをひらがなで入力するか、指で書いて、自分で○×をつけます。':kind==='a'?'漢字は、読み（入力）や書き（手書き）で、語彙は、4択で出題します。':''}</p>
+  ${kind==='k'||kind==='a'?`<div class="seglabel">${kind==='a'?'漢字の出題':'出題'}</div>${seg('kt',[['r','読み（入力）'],['w','書き（手書き）'],['both','両方']])}`:''}
   ${kind==='y'?`<div class="seglabel">出題</div>${seg('yt',[['m','語→意味'],['w','意味→語'],['both','両方']])}`:''}
   <div class="seglabel">問題数</div>${seg('n',[[10,'10問'],[20,'20問'],[0,'全問']])}
   ${priBlock()}
@@ -1718,18 +1712,32 @@ function practiceSetup(key){
 }
 function startQuiz(key){
   const kind=quizKind(key);
-  if(kind==='k'&&cfgQ.form==='write'){
+  if(kind==='k'){
     cfgW.range=key;cfgW.type=({w:'write',r:'read',both:'both'})[cfgQ.kt];cfgW.n=cfgQ.n;
     startWrite();
     if(W){W.back=()=>practiceSetup(key);W.backLabel='設定へ';W.again=()=>startQuiz(key)}
     return;
   }
+  if(kind==='a')return startMixed(key);
   newSess();
-  QT={k:cfgQ.kt,y:cfgQ.yt};
+  QT={k:'r',y:cfgQ.yt};
   let qs;
   try{qs=buildQs(quizIds(key),cfgQ.n)}finally{QT={k:'both',y:'both'}}
   S={key,qs,i:0,score:0,missed:[],done:false,back:()=>practiceSetup(key),backLabel:'設定へ',again:()=>startQuiz(key)};
   renderQ();
+}
+/* 漢字（入力・手書き）と、語彙（4択）を、まぜて出す */
+function startMixed(key){
+  newSess();
+  const kr=[],yr=[];
+  quizIds(key).forEach(id=>{const pg=P.find(p=>p.id===id);pg.items.forEach((_,i)=>(pg.kind==='k'?kr:yr).push(id+':'+i))});
+  let qs=[];
+  kr.forEach(r=>{if(cfgQ.kt!=='r')qs.push(mkQ(r,'w'));if(cfgQ.kt!=='w')qs.push(mkQ(r,'r'))});
+  yr.forEach(r=>qs.push(mkQ(r,'y')));
+  qs=shuffle(qs);
+  if(cfgQ.n&&qs.length>cfgQ.n)qs=shuffle(prioritize(qs,q=>q.ref).slice(0,cfgQ.n));
+  W={qs,i:0,score:0,missed:[],log:[],kind:'write',t0:Date.now(),back:()=>practiceSetup(key),backLabel:'設定へ',again:()=>startQuiz(key)};
+  renderW();
 }
 
 /* ---------- 一覧モード（語ごとの○✕と、チャプター練習） ---------- */
@@ -1772,8 +1780,8 @@ function listScreen(gid){
   <p class="hint" style="margin-top:2px">○＝直近で正解、✕＝直近で不正解、未＝まだ回答していない語です。語をタップすると、その語だけ練習できます。</p>
   <div class="seg" data-f="1">${[['all','全部'],['ng','✕だけ'],['un','未だけ'],['ok','○だけ']].map(([v,l])=>`<button data-v="${v}" aria-pressed="${cfgL.filter===v}">${l}</button>`).join('')}</div>
   <div class="lbtns">
-    <button class="mb pri" id="lp"${refs.length?'':' disabled'}>この一覧（${refs.length}語）を練習</button>
-    ${kind==='k'?`<button class="mb" id="lw"${refs.length?'':' disabled'}>記述式で練習</button>`:''}
+    <button class="mb pri" id="lp"${refs.length?'':' disabled'}>${kind==='k'?`読みで練習（入力）`:`この一覧（${refs.length}語）を練習`}</button>
+    ${kind==='k'?`<button class="mb" id="lw"${refs.length?'':' disabled'}>書きで練習（手書き）</button>`:''}
   </div>
   <div class="list" style="margin-top:10px">${refs.map(row).join('')||'<p class="hint">該当する語はありません。</p>'}</div>`;
   document.getElementById('back').onclick=home;
@@ -1781,8 +1789,8 @@ function listScreen(gid){
   app.querySelectorAll('.seg[data-f] button').forEach(b=>b.onclick=()=>{cfgL.filter=b.dataset.v;listScreen(g)});
   app.querySelectorAll('.lrow').forEach(b=>b.onclick=()=>itemScreen(b.dataset.r));
   const back=()=>listScreen(g);
-  const lp=document.getElementById('lp');if(lp)lp.onclick=()=>startRefsChoice(refs,back,'一覧へ');
-  const lw=document.getElementById('lw');if(lw)lw.onclick=()=>startRefsWrite(refs,back,'一覧へ');
+  const lp=document.getElementById('lp');if(lp)lp.onclick=()=>kind==='k'?startRefsWrite(refs,back,'一覧へ','r'):startRefsChoice(refs,back,'一覧へ');
+  const lw=document.getElementById('lw');if(lw)lw.onclick=()=>startRefsWrite(refs,back,'一覧へ','w');
   window.scrollTo(0,0);
 }
 function itemScreen(ref){
@@ -1800,15 +1808,14 @@ function itemScreen(ref){
   </div>
   <div class="navrow"><button class="mb" id="prev"${idx<=0?' disabled':''}>← 前の語</button><button class="mb" id="next"${idx>=n-1?' disabled':''}>次の語 →</button></div>
   <div class="group">この語を練習</div>
-  ${info.kind==='k'?`<button class="primary" id="pw">手書きで練習（書き）</button>
-  <button class="ghost" id="pr">入力で練習（読み）</button>
-  <button class="ghost" id="pc">選択問題で練習</button>`:`<button class="primary" id="pc">選択問題で練習</button>`}
+  ${info.kind==='k'?`<button class="primary" id="pr">読みで練習（入力）</button>
+  <button class="ghost" id="pw">書きで練習（手書き）</button>`:`<button class="primary" id="pc">選択問題で練習</button>`}
   <button class="ghost" id="bl">一覧にもどる</button>`;
   document.getElementById('back').onclick=()=>listScreen(LCTX.gid);
   document.getElementById('bl').onclick=()=>listScreen(LCTX.gid);
   document.getElementById('prev').onclick=()=>itemScreen(LCTX.refs[idx-1]);
   document.getElementById('next').onclick=()=>itemScreen(LCTX.refs[idx+1]);
-  document.getElementById('pc').onclick=()=>startItemChoice(ref,back);
+  const pc=document.getElementById('pc');if(pc)pc.onclick=()=>startItemChoice(ref,back);
   const pw=document.getElementById('pw'),pr=document.getElementById('pr');
   if(pw)pw.onclick=()=>startItemWrite(ref,'w',back);
   if(pr)pr.onclick=()=>startItemWrite(ref,'r',back);
@@ -1817,7 +1824,7 @@ function itemScreen(ref){
 function itemChoiceQs(ref){
   const gid=ref.split(':')[0],kind=P.find(p=>p.id===gid).kind;
   const out=[];
-  const modes=kind==='k'?[{k:'w'},{k:'r'}]:[{y:'m'},{y:'w'}];
+  const modes=kind==='k'?[{k:'r'}]:[{y:'m'},{y:'w'}];
   modes.forEach(m=>{
     QT=Object.assign({k:'both',y:'both'},m);
     try{const q=buildQs([gid],0).find(x=>x.ref===ref);if(q)out.push(q)}finally{QT={k:'both',y:'both'}}
@@ -1843,11 +1850,11 @@ function startRefsChoice(refs,back,label){
   S={key:'item',qs:shuffle(qs),i:0,score:0,missed:[],done:false,back,backLabel:label||'戻る',again:()=>startRefsChoice(refs,back,label)};
   renderQ();
 }
-function startRefsWrite(refs,back,label){
+function startRefsWrite(refs,back,label,type){
   if(!refs.length)return;
   newSess();
-  const qs=shuffle(refs.flatMap(r=>[mkQ(r,'w'),mkQ(r,'r')])).slice(0,20);
-  W={qs,i:0,score:0,missed:[],log:[],kind:'item',t0:Date.now(),back,backLabel:label||'戻る',again:()=>startRefsWrite(refs,back,label)};
+  const qs=shuffle(refs.flatMap(r=>type==='w'?[mkQ(r,'w')]:type==='r'?[mkQ(r,'r')]:[mkQ(r,'w'),mkQ(r,'r')])).slice(0,20);
+  W={qs,i:0,score:0,missed:[],log:[],kind:'item',t0:Date.now(),back,backLabel:label||'戻る',again:()=>startRefsWrite(refs,back,label,type)};
   renderW();
 }
 
